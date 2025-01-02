@@ -1,9 +1,9 @@
 # dotfiles
 My dotfile configurations
 
-### Install with stow:
+## Install with stow:
 ```bash
-stow .
+stow <tool>
 ```
 
 
