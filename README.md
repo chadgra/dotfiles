@@ -3,7 +3,7 @@ My dotfile configurations
 
 ## Install with stow:
 ```bash
-stow <tool>
+stow .
 ```
 
 
