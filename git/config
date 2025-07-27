@@ -1,0 +1,21 @@
+[core]
+	editor = nvim
+
+# Settings for git-delta
+# `sudo apt install git-delta`
+[core]
+	pager = delta
+
+[interactive]
+	diffFilter = delta --color-only --features=interactive
+
+[delta]
+	navigate = true		# use n and N to move between diff sections
+	dark = true		# or light = true, or omit for auto-detection
+	side-by-side = true	# show diffs side by side
+	line-numbers = true	# show line numbers in the diff
+	features = decorations
+
+[merge]
+	conflictstyle = zdiff3
+
