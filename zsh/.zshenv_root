@@ -1,0 +1,5 @@
+# This .zshenv should be symlinked to ~/.zshenv so that zsh
+# can find the rest of the zsh config files in ~/.config/zsh
+export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:=${HOME}/.config}
+export ZDOTDIR=${ZDOTDIR:=${XDG_CONFIG_HOME}/zsh}
+source $ZDOTDIR/.zshenv

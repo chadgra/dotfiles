@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 stow .
-ln -sf ~/.config/zshrc/.zshrc ~/.zshrc
+
+# Link the .zshenv_root to ~/.zshenv so that zsh can find the config
+# files in ~/.config/zsh/
+ln -sf ~/.config/zsh/.zshenv_root ~/.zshenv
 
