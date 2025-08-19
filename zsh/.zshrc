@@ -112,7 +112,8 @@ if [ -d "$HOME/.pyenv" ]; then
 fi
 
 # Setting up lazygit
-lg()
+unalias gg
+gg()
 {
     export LAZYGIT_NEW_DIR_FILE=~/.lazygit/newdir
 
