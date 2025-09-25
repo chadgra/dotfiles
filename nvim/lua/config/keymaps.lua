@@ -10,6 +10,9 @@ vim.keymap.set("n", "<leader>bo", Snacks.bufdelete.other, { desc = "Close Other 
 vim.keymap.set("n", "<leader><CR>", "<cmd>%bd<cr>", { desc = "Close All Buffers" })
 
 -- Keymaps for insert mode
-  -- 'jk' is handled by better-escape.lua
-  -- vim.keymap.set("i", "jk", "<Esc>", { desc = "Normal mode" })
-  vim.keymap.set("i", ";;", "<C-o>", { desc = "Normal mode single operation" })
+-- 'jk' is handled by better-escape.lua
+-- vim.keymap.set("i", "jk", "<Esc>", { desc = "Normal mode" })
+vim.keymap.set("i", ";;", "<C-o>", { desc = "Normal mode single operation" })
+
+-- Remove the default terminal keymap so it can be used with ToggleTerm
+vim.keymap.del("n", "<C-/>")
