@@ -13,12 +13,12 @@ return {
         desc = "ToggleTerm (float root_dir)",
       },
       {
-        "<leader>zh",
+        "<leader>zs",
         function()
           local count = vim.v.count1
           require("toggleterm").toggle(count, 15, LazyVim.root.get(), "horizontal")
         end,
-        desc = "ToggleTerm (horizontal root_dir)",
+        desc = "ToggleTerm (standard root_dir)",
       },
       {
         "<leader>zv",
@@ -34,7 +34,7 @@ return {
         desc = "Set term name",
       },
       {
-        "<leader>zs",
+        "<leader>z,",
         "<cmd>TermSelect<cr>",
         desc = "Select term",
       },
@@ -62,7 +62,7 @@ return {
           return vim.o.columns * 0.4
         end
       end,
-      open_mapping = [[<C-/>]],
+      open_mapping = [[<C-y>]],
       -- on_open = fun(t: Terminal), -- function to run when the terminal opens
       -- on_close = fun(t: Terminal), -- function to run when the terminal closes
       -- on_stdout = fun(t: Terminal, job: number, data: string[], name: string) -- callback for processing output on stdout
