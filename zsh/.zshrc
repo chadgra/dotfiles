@@ -103,6 +103,10 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+# Put anything that shouldn't be committed to version control in
+# this file (API keys, passwords, etc.).
+source $ZDOTDIR/.zsh_sensitive_values
+
 # Setting up pyenv, if present
 if [ -d "$HOME/.pyenv" ]; then
     export PYENV_ROOT="$HOME/.pyenv"
@@ -110,6 +114,26 @@ if [ -d "$HOME/.pyenv" ]; then
     eval "$(pyenv init - zsh)"
     eval "$(pyenv virtualenv-init -)"
 fi
+
+export TZ='America/Denver'
+alias size='du -d 1 -h'
+
+now() {
+        date +%c
+}
+
+tl() {
+        local command=${@}
+        local logFile=log.log
+
+        local lastVar=${@: -1}
+        if [ -z ${lastVar##*.log} ]; then
+                logFile=$lastVar
+                command=${@:1:$#-1}
+        fi
+
+        { echo "$ tl ${@}"; echo; now; time $command; now; } 2>&1 | tee $logFile
+}
 
 # Setting up lazygit
 unalias gg
