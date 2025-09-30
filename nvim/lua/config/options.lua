@@ -5,3 +5,6 @@
 -- Disable auto-formatting of files on "Save"
 -- formatting can still be triggered manually with `leader>cf`
 vim.g.autoformat = false
+
+vim.opt.number = true
+vim.opt.relativenumber = false
