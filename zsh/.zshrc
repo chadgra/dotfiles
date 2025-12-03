@@ -105,7 +105,9 @@ source $ZSH/oh-my-zsh.sh
 
 # Put anything that shouldn't be committed to version control in
 # this file (API keys, passwords, etc.).
-source $ZDOTDIR/.zsh_sensitive_values
+if [ -f "$ZDOTDIR/.zsh_sensitive_values" ]; then
+    source $ZDOTDIR/.zsh_sensitive_values
+fi
 
 # Setting up pyenv, if present
 if [ -d "$HOME/.pyenv" ]; then
