@@ -1,0 +1,69 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   OPENCODE MODEL SELECTION QUICK REFERENCE                 ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+🔴 ALWAYS PREMIUM (Claude Sonnet)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  security       🛡️  Security cannot be compromised
+  review         🔍  Complex architectural analysis
+  debug          🐛  Deep root cause analysis
+  performance    ⚡  Bottleneck identification
+  lua-expert     🌙  Specialized domain knowledge
+
+
+🟢 PREFER COST-EFFECTIVE (GPT-4o)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  explain        📖  Primarily descriptive work
+  document       📝  Text generation with patterns
+
+
+🟡 FLEXIBLE (Start GPT-4o → Escalate if Needed)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  config-expert  ⚙️  Simple edits = GPT-4o, Complex = Sonnet
+  test-driven    🧪  Basic tests = GPT-4o, TDD = Sonnet
+  refactor       🔧  Simple renames = GPT-4o, Design patterns = Sonnet
+
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ QUICK DECISION TREE                                                        │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                            │
+│  Security-related?           → Claude Sonnet (ALWAYS)                     │
+│  Explanation/docs?           → GPT-4o                                     │
+│  Complex reasoning?          → Claude Sonnet                              │
+│  Simple & straightforward?   → GPT-4o                                     │
+│  Not sure?                   → Claude Sonnet (safer)                      │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+
+💰 COST OPTIMIZATION TIPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✓ Batch similar tasks together
+  ✓ Use GPT-4o for first pass, escalate if needed
+  ✓ Review specific files, not entire codebase
+  ✓ Check CHEATSHEET.md before calling agents
+  ✓ Use cost-effective models for daily maintenance
+  ✗ Don't cheap out on security (ALWAYS premium)
+
+
+📊 TYPICAL COST BREAKDOWN (per 100 agent calls/month)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Premium (60 calls):    Reviews, Debugging, Security, Performance, Lua
+  Cost-Effective (40):   Explanations, Documentation, Simple Configs
+
+  💡 This gives you quality where it matters, savings where it doesn't.
+
+
+📖 MORE DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  See MODEL_GUIDE.md for:
+    • Detailed agent-by-agent breakdown
+    • Cost optimization strategies
+    • Common usage scenarios
+    • Monthly budget planning
+    • When to escalate from GPT-4o to Sonnet
+
