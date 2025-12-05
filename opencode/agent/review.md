@@ -60,6 +60,24 @@ Always use the Task tool to launch these specialist agents in parallel when rele
 - LazyVim plugin specs
 - Lua-specific code patterns
 
+**python-expert** - Use when reviewing:
+- Any `.py` files
+- Python scripts and modules
+- Type hints and modern Python features
+- Pythonic patterns and idioms
+
+**rust-expert** - Use when reviewing:
+- Any `.rs` files
+- Rust projects (Cargo.toml)
+- Ownership/borrowing patterns
+- Unsafe code blocks
+
+**cpp-expert** - Use when reviewing:
+- Any `.cpp`, `.cc`, `.cxx`, `.c`, `.h`, `.hpp` files
+- C/C++ projects (CMakeLists.txt)
+- Memory management patterns
+- Modern C++ features
+
 **config-expert** - Use when reviewing:
 - Config files (`.toml`, `.yml`, `.json`, `.conf`)
 - Dotfiles (`.zshrc`, `.bashrc`, etc.)
@@ -135,6 +153,48 @@ Reason: It's Lua code + handles sensitive auth
 File: utils/string_helpers.lua
 Delegate to: lua-expert (only)
 Reason: Pure Lua utility, no config/perf/security concerns
+```
+
+**Pattern 5: Python Script Review**
+```
+File: scripts/data_processor.py
+Delegate to: python-expert, performance (both in parallel)
+Reason: Python code + data processing performance matters
+```
+
+**Pattern 6: Rust Code Review**
+```
+File: src/parser.rs
+Delegate to: rust-expert, performance, security (all in parallel)
+Reason: Rust code + performance-critical + may handle untrusted input
+```
+
+**Pattern 7: C++ Code Review**
+```
+File: src/main.cpp
+Delegate to: cpp-expert, security (both in parallel)
+Reason: C++ code + potential memory safety issues
+```
+
+**Pattern 5: Python Script Review**
+```
+File: scripts/data_processor.py
+Delegate to: python-expert, performance (both in parallel)
+Reason: Python code + data processing performance matters
+```
+
+**Pattern 6: Rust Code Review**
+```
+File: src/parser.rs
+Delegate to: rust-expert, performance, security (all in parallel)
+Reason: Rust code + performance-critical + may handle untrusted input
+```
+
+**Pattern 7: C++ Code Review**
+```
+File: src/main.cpp
+Delegate to: cpp-expert, security (both in parallel)
+Reason: C++ code + potential memory safety issues
 ```
 
 ### Parallel Execution Command
@@ -482,11 +542,28 @@ Use severity levels:
 - Follow LazyVim conventions for Neovim plugins
 
 ### Python
-- Follow PEP 8
-- Use type hints
-- Proper exception handling
+- Follow PEP 8 style guide
+- Use type hints for function signatures
+- Proper exception handling (EAFP pattern)
 - List comprehensions for clarity
-- Context managers for resources
+- Context managers for resource management
+- Prefer standard library over external dependencies
+
+### Rust
+- Ownership and borrowing rules are fundamental
+- Use `Result<T, E>` for error handling
+- Avoid `.unwrap()` in production code
+- Prefer iterators over manual loops
+- Document unsafe code thoroughly
+- Follow Rust naming conventions (snake_case)
+
+### C/C++
+- Use RAII pattern for resource management
+- Prefer smart pointers over raw pointers
+- Use const correctness throughout
+- Avoid manual memory management when possible
+- Check for memory leaks with valgrind/sanitizers
+- Follow Rule of 5 (or Rule of 0)
 
 ## Review Tone
 

@@ -44,7 +44,10 @@ Your job is to:
 | `.toml`, `.yml`, `.yaml`, `.json` | config-expert | security |
 | `.conf` | config-expert | security |
 | `.zshrc`, `.bashrc`, `.zshenv` | config-expert | security, performance |
-| `.py` | (handle directly) | security, performance |
+| `.py` | python-expert | security, performance |
+| `.rs` | rust-expert | security, performance |
+| `.cpp`, `.cc`, `.cxx`, `.hpp`, `.h` | cpp-expert | security, performance |
+| `.c` | cpp-expert | security, performance |
 
 ### By File Path Pattern
 
@@ -92,6 +95,27 @@ Your job is to:
 - `require()`, `pcall()`, `xpcall()` (Lua patterns)
 - LazyVim plugin specifications
 - Neovim autocommands or user commands
+
+**Trigger rust-expert** if code contains:
+- `impl`, `trait`, `struct`, `enum` (Rust keywords)
+- `&`, `&mut`, lifetime annotations (`'a`, `'static`)
+- `Result<T, E>`, `Option<T>`, `?` operator
+- `async`/`.await`, `tokio`, `async-std`
+- Cargo.toml or Rust project structure
+
+**Trigger cpp-expert** if code contains:
+- `std::`, `#include`, templates (`template<typename T>`)
+- Smart pointers (`unique_ptr`, `shared_ptr`, `weak_ptr`)
+- `new`/`delete`, `malloc`/`free`
+- Move semantics (`std::move`, rvalue references `&&`)
+- CMakeLists.txt or C/C++ project structure
+
+**Trigger python-expert** if code contains:
+- `def`, `class`, Python decorators (`@`)
+- Type hints (`: str`, `-> int`, `Optional`, `Union`)
+- `async def`, `await`, `asyncio`
+- List comprehensions, generators (`yield`)
+- requirements.txt, pyproject.toml, or setup.py
 
 ## Request Processing Workflow
 

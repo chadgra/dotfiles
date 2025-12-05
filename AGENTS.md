@@ -1,5 +1,17 @@
 # AGENTS.md
 
+## Available Language Expert Agents
+
+This repository has specialized expert agents for different programming languages:
+
+- **lua-expert**: Lua programming, Neovim configuration, LazyVim plugins
+- **python-expert**: Python programming, type hints, async patterns, testing
+- **rust-expert**: Rust programming, ownership/borrowing, async, cargo
+- **cpp-expert**: C/C++ programming, modern C++, memory management, STL
+
+These agents are automatically invoked by the main OpenCode agent based on file
+types and context. You don't need to explicitly call them.
+
 ## Build, Lint, and Test Commands
 
 - **Run all tests**: `pytest`

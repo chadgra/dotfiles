@@ -10,13 +10,16 @@ the user having to specify them.
 | Extension | Primary Agent | Secondary Agents |
 |-----------|--------------|------------------|
 | `.lua` | lua-expert | performance, security |
+| `.py` | python-expert | security, performance |
+| `.rs` | rust-expert | security, performance |
+| `.cpp`, `.cc`, `.cxx` | cpp-expert | security, performance |
+| `.c`, `.h`, `.hpp` | cpp-expert | security, performance |
 | `.toml` | config-expert | security |
 | `.yml`, `.yaml` | config-expert | security |
 | `.json` | config-expert | - |
 | `.conf` | config-expert | security |
 | `.zshrc`, `.bashrc` | config-expert | security, performance |
 | `.zshenv`, `.zprofile` | config-expert | security |
-| `.py` | (general) | security, performance |
 
 ### By File Path Pattern
 
@@ -67,6 +70,24 @@ When analyzing code content, trigger:
 - LazyVim plugin specs
 - Neovim autocommands
 
+**python-expert** if code contains:
+- Python type hints (`: str`, `-> int`)
+- `async def`, `await`
+- List comprehensions, decorators
+- `requirements.txt`, `pyproject.toml`
+
+**rust-expert** if code contains:
+- `impl`, `trait`, `struct`, `enum`
+- Lifetime annotations (`'a`)
+- `Result<T, E>`, `Option<T>`
+- `Cargo.toml`, `cargo` commands
+
+**cpp-expert** if code contains:
+- `std::`, `#include`, templates
+- Smart pointers (`unique_ptr`, `shared_ptr`)
+- `new`/`delete`, RAII patterns
+- `CMakeLists.txt`
+
 ## Decision Tree for Main OpenCode Agent
 
 ```
@@ -82,6 +103,9 @@ User Request Received
 │
 ├─ What file type?
 │  ├─ .lua → Consider lua-expert
+│  ├─ .py → Consider python-expert
+│  ├─ .rs → Consider rust-expert
+│  ├─ .cpp/.c/.h → Consider cpp-expert
 │  ├─ .toml/.yml/.json → Consider config-expert
 │  ├─ Shell config → Consider config-expert
 │  └─ Other → Continue
