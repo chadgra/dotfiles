@@ -49,26 +49,150 @@ When reviewing merge requests, follow this workflow:
    - Continue to next issue
 4. **Post Only When Authorized**: Only execute `glab` commands to post comments after explicit user approval
 
+### GitLab API Authentication
+
+The GitLab token is available in the `GITLAB_TOKEN` environment variable. Always use `${GITLAB_TOKEN}` in API requests.
+
+If for some reason the token is not available, ask the user: "Please provide your GitLab token with `api` scope. Create one at: https://gitlab.com/-/user_settings/personal_access_tokens"
+
+### Getting Project ID and MR Details
+
+**IMPORTANT**: Always get the PROJECT_ID dynamically - never hardcode it!
+
+```bash
+MR_ID="<merge-request-id>"
+
+# Method 1: Get project ID from git remote (works when in a git repo)
+PROJECT_PATH=$(git remote get-url origin 2>/dev/null | sed -E 's#.*gitlab\.com[:/](.+)\.git#\1#')
+PROJECT_PATH_ENCODED=$(echo "$PROJECT_PATH" | sed 's/\//%2F/g')
+PROJECT_ID=$(glab api "/projects/${PROJECT_PATH_ENCODED}" | jq -r '.id')
+
+# Method 2: Get all MR details including project_id, BASE_SHA, and HEAD_SHA in one API call
+MR_DATA=$(glab api "/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_ID}")
+PROJECT_ID=$(echo "$MR_DATA" | jq -r '.project_id')
+BASE_SHA=$(echo "$MR_DATA" | jq -r '.diff_refs.base_sha')
+HEAD_SHA=$(echo "$MR_DATA" | jq -r '.diff_refs.head_sha')
+```
+
 ### Inline Comment Format
 
-When user approves posting an inline comment, use:
+When user approves posting an inline comment, use the GitLab Web API with curl:
+
 ```bash
-glab api -X POST "/projects/vivint%2Fcamera%2Fcamera-build/merge_requests/<MR_ID>/discussions" \
-  -F "body=<COMMENT_TEXT>" \
-  -F "position[base_sha]=<BASE_SHA>" \
-  -F "position[start_sha]=<START_SHA>" \
-  -F "position[head_sha]=<HEAD_SHA>" \
-  -F "position[position_type]=text" \
-  -F "position[new_path]=<FILE_PATH>" \
-  -F "position[new_line]=<LINE_NUMBER>"
+# Get MR details (PROJECT_ID, BASE_SHA, HEAD_SHA)
+MR_ID="<merge-request-id>"
+PROJECT_PATH=$(git remote get-url origin 2>/dev/null | sed -E 's#.*gitlab\.com[:/](.+)\.git#\1#')
+PROJECT_PATH_ENCODED=$(echo "$PROJECT_PATH" | sed 's/\//%2F/g')
+MR_DATA=$(glab api "/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_ID}")
+PROJECT_ID=$(echo "$MR_DATA" | jq -r '.project_id')
+BASE_SHA=$(echo "$MR_DATA" | jq -r '.diff_refs.base_sha')
+HEAD_SHA=$(echo "$MR_DATA" | jq -r '.diff_refs.head_sha')
+
+# Post inline comment
+curl -s -X POST \
+  -H "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "body": "<COMMENT_TEXT>",
+    "position": {
+      "base_sha": "'${BASE_SHA}'",
+      "start_sha": "'${BASE_SHA}'",
+      "head_sha": "'${HEAD_SHA}'",
+      "position_type": "text",
+      "new_path": "<FILE_PATH>",
+      "new_line": <LINE_NUMBER>
+    }
+  }' \
+  "https://gitlab.com/api/v4/projects/${PROJECT_ID}/merge_requests/${MR_ID}/discussions" \
+  | jq -r 'if .id then "✓ Posted inline comment on <FILE_PATH>:<LINE_NUMBER>" else "✗ Failed: \(.message // .error)" end'
 ```
 
 ### General Comment Format
 
-When user approves posting a general comment, use:
+When user approves posting a general comment (not line-specific), use:
+
 ```bash
-glab mr comment <MR_ID> --message "<COMMENT_TEXT>"
+# Get project details
+MR_ID="<merge-request-id>"
+PROJECT_PATH=$(git remote get-url origin 2>/dev/null | sed -E 's#.*gitlab\.com[:/](.+)\.git#\1#')
+PROJECT_PATH_ENCODED=$(echo "$PROJECT_PATH" | sed 's/\//%2F/g')
+PROJECT_ID=$(glab api "/projects/${PROJECT_PATH_ENCODED}" | jq -r '.id')
+
+# Post general comment
+curl -s -X POST \
+  -H "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"body": "<COMMENT_TEXT>"}' \
+  "https://gitlab.com/api/v4/projects/${PROJECT_ID}/merge_requests/${MR_ID}/notes" \
+  | jq -r 'if .id then "✓ Posted general comment to MR" else "✗ Failed: \(.message // .error)" end'
 ```
+
+### Finding Project IDs (Reference)
+
+The methods above handle this automatically, but for manual reference:
+
+```bash
+# Using glab CLI with current repo
+PROJECT_PATH=$(git remote get-url origin | sed -E 's#.*gitlab\.com[:/](.+)\.git#\1#')
+PROJECT_PATH_ENCODED=$(echo "$PROJECT_PATH" | sed 's/\//%2F/g')
+glab api "/projects/${PROJECT_PATH_ENCODED}" | jq '.id'
+
+# Or from GitLab Web UI
+# Navigate to project → Settings → General → Project ID
+```
+
+### Getting MR Changed Files
+
+To see what files changed in an MR:
+
+```bash
+MR_ID="<merge-request-id>"
+PROJECT_PATH=$(git remote get-url origin 2>/dev/null | sed -E 's#.*gitlab\.com[:/](.+)\.git#\1#')
+PROJECT_PATH_ENCODED=$(echo "$PROJECT_PATH" | sed 's/\//%2F/g')
+
+# List all changed files
+glab api "/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_ID}/changes" | jq -r '.changes[] | .new_path'
+
+# Get diff for a specific file
+glab api "/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_ID}/changes" | jq -r '.changes[] | select(.new_path == "path/to/file") | .diff'
+```
+
+### Line Number Validation
+
+Comments must reference lines that exist in the diff. To find valid lines:
+
+```bash
+MR_ID="<merge-request-id>"
+PROJECT_PATH=$(git remote get-url origin 2>/dev/null | sed -E 's#.*gitlab\.com[:/](.+)\.git#\1#')
+PROJECT_PATH_ENCODED=$(echo "$PROJECT_PATH" | sed 's/\//%2F/g')
+
+# Get the diff and see line numbers for a specific file
+glab api "/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_ID}/changes" | \
+  jq -r '.changes[] | select(.new_path == "path/to/file") | .diff'
+
+# The diff output shows @@ line numbers and actual changed lines
+# Comment on lines visible in the "new" version (lines starting with + or unchanged context)
+```
+
+**IMPORTANT:** Always verify that the line number you're commenting on exists in the HEAD_SHA version of the file. Comments should be on:
+- Lines that were added (shown with `+` in diff)
+- Lines that were modified
+- Unchanged context lines near changes
+
+Lines that were removed (shown with `-`) cannot be commented on in the new version.
+
+### Error Handling
+
+Common errors and solutions:
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `401 Unauthorized` | Invalid or expired token | Ask user for new token with `api` scope |
+| `line_code can't be blank` | Line number not in diff | Find nearest changed line in diff hunks |
+| `404 Not Found` | Wrong project/MR ID | Verify MR URL and project path |
+| `500 Internal Server Error` | Invalid position data | Verify BASE_SHA, HEAD_SHA, and line number |
+
+When a comment fails, provide the error message to the user and suggest corrections.
 
 ### Review Presentation Format
 
@@ -112,23 +236,30 @@ Would you like me to:
 
 ### GitLab MR Review Support
 
-When reviewing GitLab merge requests, you can post comments directly using `glab`:
-
-**For line-specific comments:**
-```bash
-glab mr note <MR_ID> --message "Comment text" --file <FILE_PATH> --line <LINE_NUMBER>
-```
-
-**For general MR comments (when no specific line):**
-```bash
-glab mr note <MR_ID> --message "Comment text"
-```
+When reviewing GitLab merge requests, you can post comments using the GitLab Web API.
 
 **Get MR information:**
 ```bash
-glab mr view <MR_ID>
-glab mr diff <MR_ID>
+# Fetch the MR locally
+MR_ID="<number>"
+git fetch origin refs/merge-requests/${MR_ID}/head:mr-${MR_ID}
+
+# Get commit SHAs
+BASE_SHA=$(git rev-parse mr-${MR_ID}^)
+HEAD_SHA=$(git rev-parse mr-${MR_ID})
+
+# View diff
+git diff ${BASE_SHA}..${HEAD_SHA}
+
+# List changed files
+git diff --name-only ${BASE_SHA}..${HEAD_SHA}
 ```
+
+**For line-specific comments:**
+Use the Web API method with position data (see "Inline Comment Format" section above)
+
+**For general MR comments:**
+Use the Web API notes endpoint (see "General Comment Format" section above)
 
 ### Issue Presentation Format
 
@@ -163,7 +294,7 @@ Present each issue like this:
 
 **Actions Available:**
 1. **Skip** - Move to next issue
-2. **Post to GitLab MR** - Post this as a comment on the MR (I'll handle the glab command)
+2. **Post to GitLab MR** - Post this as an inline comment on the MR (I'll use the Web API)
 3. **Post general comment** - Post as general MR comment (no line number)
 4. **Done** - Stop review here
 5. **Show all remaining** - See summary of all remaining issues
@@ -264,9 +395,9 @@ cursor.execute(query, (user_id,))
 USER: "post"
 
 ASSISTANT:
-[Executes: glab mr note 123 --message "SQL injection vulnerability: Query uses string concatenation with user input. Use parameterized queries instead." --file src/auth.py --line 45]
+[Executes Web API curl command to post inline comment]
 
-✓ Posted comment to MR !123
+✓ Posted inline comment to MR !123 on src/auth.py:45
 
 Moving to next issue...
 
