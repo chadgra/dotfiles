@@ -40,55 +40,72 @@ PROJECT_PATH_ENCODED=$(echo "$PROJECT_PATH" | sed 's|/|%2F|g')
 - Line was **deleted** (only exists in old version) → use `old_path` + `old_line`
 - When in doubt about a context line, prefer `new_path` + `new_line`
 
+## Required values
+
+Before posting, you need these values — all come from the MR context (fetched via `gitlab-mr-fetch` or the GitLab API):
+
+```bash
+BASE_SHA    # diff_refs.base_sha from the MR object
+HEAD_SHA    # diff_refs.head_sha from the MR object
+START_SHA   # diff_refs.start_sha from the MR object — do NOT guess or reuse base_sha
+MR_IID      # The MR number shown in the URL (not the internal numeric id)
+FILE_PATH   # Exactly as it appears in the diff (e.g., src/foo/bar.rs)
+LINE_NUMBER # Line number in the rendered diff (integer, no quotes)
+COMMENT_BODY # The comment text — see escaping note below
+```
+
+If any of these are missing, fetch the MR first.
+
 ## Post the comment
 
 ### New/context line (most common)
 
 ```bash
-curl --silent --request POST \
+PAYLOAD=$(jq -n \
+  --arg body "$COMMENT_BODY" \
+  --arg base "$BASE_SHA" \
+  --arg head "$HEAD_SHA" \
+  --arg start "$START_SHA" \
+  --arg path "$FILE_PATH" \
+  --argjson line "$LINE_NUMBER" \
+  '{body: $body, position: {base_sha: $base, head_sha: $head, start_sha: $start, position_type: "text", new_path: $path, new_line: $line}}')
+
+RESPONSE=$(curl --silent --request POST \
   --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
   --header "Content-Type: application/json" \
-  --data "{
-    \"body\": \"${COMMENT_BODY}\",
-    \"position\": {
-      \"base_sha\": \"${BASE_SHA}\",
-      \"head_sha\": \"${HEAD_SHA}\",
-      \"start_sha\": \"${START_SHA}\",
-      \"position_type\": \"text\",
-      \"new_path\": \"${FILE_PATH}\",
-      \"new_line\": ${LINE_NUMBER}
-    }
-  }" \
-  "https://gitlab.com/api/v4/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_IID}/discussions"
+  --data "$PAYLOAD" \
+  "https://gitlab.com/api/v4/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_IID}/discussions")
 ```
 
 ### Deleted line (old side only)
 
 ```bash
-curl --silent --request POST \
+PAYLOAD=$(jq -n \
+  --arg body "$COMMENT_BODY" \
+  --arg base "$BASE_SHA" \
+  --arg head "$HEAD_SHA" \
+  --arg start "$START_SHA" \
+  --arg path "$FILE_PATH" \
+  --argjson line "$LINE_NUMBER" \
+  '{body: $body, position: {base_sha: $base, head_sha: $head, start_sha: $start, position_type: "text", old_path: $path, old_line: $line}}')
+
+RESPONSE=$(curl --silent --request POST \
   --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
   --header "Content-Type: application/json" \
-  --data "{
-    \"body\": \"${COMMENT_BODY}\",
-    \"position\": {
-      \"base_sha\": \"${BASE_SHA}\",
-      \"head_sha\": \"${HEAD_SHA}\",
-      \"start_sha\": \"${START_SHA}\",
-      \"position_type\": \"text\",
-      \"old_path\": \"${FILE_PATH}\",
-      \"old_line\": ${LINE_NUMBER}
-    }
-  }" \
-  "https://gitlab.com/api/v4/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_IID}/discussions"
+  --data "$PAYLOAD" \
+  "https://gitlab.com/api/v4/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_IID}/discussions")
 ```
+
+Note: `jq` is required for safe JSON construction. If unavailable, install with `sudo apt install jq` or `brew install jq`.
 
 ## Handle the response
 
 Parse the curl output (it returns JSON):
 
-**Success** — response contains `"id"` and `"notes"`. Extract and show the web URL:
-```
-✓ Comment posted: https://gitlab.com/<project>/-/merge_requests/<iid>#note_<note_id>
+**Success** — response contains `"id"` and `"notes"`. Extract the note ID and build the URL:
+```bash
+NOTE_ID=$(echo "$RESPONSE" | jq -r '.notes[0].id')
+echo "✓ Comment posted: https://gitlab.com/${PROJECT_PATH}/-/merge_requests/${MR_IID}#note_${NOTE_ID}"
 ```
 
 **Failure** — response contains `"message"`. Show the error clearly:
