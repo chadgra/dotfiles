@@ -19,6 +19,8 @@ If any of these are missing, run `gitlab-mr-fetch` first.
 
 ## Analysis approach
 
+If the diff has no issues worth raising, skip directly to the summary and tell the user: "I reviewed the diff and found no issues to flag. The changes look clean." Then offer the verdict as usual.
+
 Read the entire diff and all full file contexts before surfacing any issues. Build a complete internal list of findings. Then work through them one at a time — never dump the full list to the user.
 
 For each changed file, consider:
@@ -48,8 +50,11 @@ Suggested comment:
 [post] [skip] [edit]
 ```
 
+> **Note on line numbers:** Use the `new_line` number (the line as it appears in the new version of the file) — this matches what the GitLab API requires for `new_line` in the comment position. For deleted lines (old side only), use the `old_line` number instead.
+
 - `N` = current issue number (1-indexed)
 - `M` = estimated total (can be approximate, e.g. "~5")
+- Derive `M` from the count of findings in your internal list. If you haven't fully enumerated yet, use a reasonable estimate based on the diff size.
 - The suggested comment should be written in first person as the reviewer, not as AI narrating
 
 Wait for the user's response after each issue. Do not proceed until they respond.
@@ -64,6 +69,7 @@ Wait for the user's response after each issue. Do not proceed until they respond
   - `MR_IID` and `PROJECT_PATH` from context
   - The suggested comment body
 - After the comment is confirmed posted, move to the next issue
+- If the comment fails to post, the `gitlab-mr-comment` skill will offer retry or skip — follow its guidance before moving on.
 
 **`skip`**:
 - Note it as skipped internally
@@ -74,6 +80,7 @@ Wait for the user's response after each issue. Do not proceed until they respond
 - Wait for the user to provide revised text
 - Then invoke `gitlab-mr-comment` with the revised text
 - After confirmed posted, move to the next issue
+- If the comment fails to post, the `gitlab-mr-comment` skill will offer retry or skip — follow its guidance before moving on.
 
 **Any other response** (e.g., a question about the code):
 - Answer the question
@@ -96,4 +103,4 @@ Then ask:
 
 - **Approve**: `glab mr approve <MR_IID>`
 - **Request changes**: Use the GitLab API — `POST /projects/:id/merge_requests/:iid/discussions` with `{ "body": "<overall feedback>" }` and no position object
-- **Comment-only**: Done, no action needed
+- **Comment-only**: Tell the user: "Review complete — comments posted, no overall verdict submitted."
