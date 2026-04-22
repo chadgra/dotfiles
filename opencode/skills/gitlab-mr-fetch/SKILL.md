@@ -21,6 +21,10 @@ PROJECT_PATH=$(echo "$REMOTE_URL" \
   | sed 's|.*gitlab\.com[:/]||' \
   | sed 's|\.git$||')
 PROJECT_PATH_ENCODED=$(echo "$PROJECT_PATH" | sed 's|/|%2F|g')
+
+# MR_IID is the merge request number from the URL or user request (e.g., "MR 42" → MR_IID=42)
+# Do NOT use the internal numeric 'id' field from the API — use 'iid' (the project-scoped number)
+MR_IID=<number provided by user>
 ```
 
 If the user provides a project path explicitly (e.g., "review MR 42 in myorg/myrepo"), use that instead of auto-detecting.
@@ -97,11 +101,18 @@ if not commented:
 
 ## Step 4: Read full file context for changed files
 
-For each file in the diff, read its full current content from the local filesystem if available:
+Get the changed file list from the API (reusing auth from above):
 
 ```bash
-# Get list of changed files from the diff
-CHANGED_FILES=$(glab mr diff "${MR_IID}" 2>/dev/null | grep '^+++ b/' | sed 's|+++ b/||')
+CHANGED_FILES=$(curl --silent \
+  --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+  "https://gitlab.com/api/v4/projects/${PROJECT_PATH_ENCODED}/merge_requests/${MR_IID}/diffs" \
+  | python3 -c "
+import json,sys
+diffs = json.load(sys.stdin)
+for d in diffs:
+    print(d['new_path'])
+")
 
 for f in $CHANGED_FILES; do
   if [ -f "$f" ]; then
@@ -114,6 +125,8 @@ for f in $CHANGED_FILES; do
 done
 ```
 
+Note: for very large files, use judgment about whether to include full content or just the diff. Full content helps with understanding context but can flood the conversation.
+
 ## Output: context block
 
 After running all steps, present a summary context block:
@@ -121,7 +134,7 @@ After running all steps, present a summary context block:
 ```
 === MR CONTEXT ===
 Project:        <org/repo>
-MR IID:         <number>
+MR IID:         <number>  ← project-scoped number visible in the URL (iid), not the internal API id
 Title:          <title>
 Author:         <name>
 Source branch:  <branch>
