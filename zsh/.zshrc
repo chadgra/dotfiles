@@ -119,6 +119,7 @@ fi
 
 export TZ='America/Denver'
 alias size='du -d 1 -h'
+alias clean_docker='docker system prune -a --volumes'
 
 now() {
         date +%c
@@ -151,6 +152,12 @@ gg()
     fi
 }
 
+# Setting up fd
+alias fd=fdfind
+
 . "$HOME/.atuin/bin/env"
 
+eval "$(zoxide init zsh)"
+
 eval "$(atuin init zsh --disable-up-arrow)"
+
